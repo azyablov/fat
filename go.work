@@ -2,6 +2,8 @@ go 1.18
 
 use (
 	./gnoi-pg
+	./lib
+	./lib/jsonrpc
 	./srlce
 	./sys
 )

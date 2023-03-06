@@ -1,0 +1,24 @@
+# Values
+# Sample:
+# --------------------------------------------------------------------------------
+# Hostname             : clab-2nd-srl1-test
+# Chassis Type         : 7220 IXR-D3L
+# Part Number          : Sim Part No.
+# Serial Number        : Sim Serial No.
+# System HW MAC Address: 1A:8C:02:FF:00:00
+# Software Version     : v22.6.4
+# Build Number         : 90-g4b19af2d95
+# Architecture         : x86_64
+# Last Booted          : 2023-02-22T18:03:22.842Z
+# Total Memory         : 23640339 kB
+# Free Memory          : 16206203 kB
+# --------------------------------------------------------------------------------
+Value Hostname ([\w\-]+)
+Value ChassisType ([\w\- ]+)
+Value SoftwareVersion ([\w\.]+)
+
+
+Start
+  ^\s*Hostname\s+:\s+${Hostname}
+  ^\s*Chassis Type\s+:\s+${ChassisType}
+  ^\s*Software Version\s+:\s+${SoftwareVersion} -> Record
