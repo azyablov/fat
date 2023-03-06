@@ -1,4 +1,4 @@
-package jsonrpc
+package jrpc
 
 import (
 	"bytes"
@@ -59,7 +59,7 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 	rand.Seed(time.Now().UnixNano())
 	id := rand.Int()
 	var cmds []interface{}
-	cmds[0] = cmd
+	cmds = append(cmds, cmd)
 	rpcReq := JSONRpcRequest{
 		JSONRpcVersion: "2.0",
 		ID:             id,
@@ -74,7 +74,7 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 		log.Fatal(err)
 	}
 	// ... creating an HTTP POST request
-	reqHTTP, err := http.NewRequest("POST", fmt.Sprintf("%s:%s", *t.Hostname, *t.Port), bytes.NewBuffer(bRpcReq))
+	reqHTTP, err := http.NewRequest("POST", fmt.Sprintf("https://%s:%v/jsonrpc", *t.Hostname, *t.Port), bytes.NewBuffer(bRpcReq))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 	reqHTTP.Header.Set("Content-Type", "application/json")
 	reqHTTP.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", *t.Username, *t.Password))))
 
-	tlsCfg := &tls.Config{InsecureSkipVerify: false} // Skipping verification
+	tlsCfg := &tls.Config{InsecureSkipVerify: true} // Skipping verification
 	// TODO: add certificate support
 
 	client := &http.Client{Transport: &http.Transport{
@@ -95,17 +95,22 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Fatal("Status: %s", resp.Status)
+		return nil, fmt.Errorf("http status: %s", resp.Status)
 	}
 
 	var rpcResp JSONRpcResponse
-	err = json.NewDecoder(resp.Body).Decode(rpcResp)
+	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("decoding error: %s", err)
+	}
+	// Checking for RPC error presence
+	if rpcResp.Error != nil {
+		return nil, fmt.Errorf("got an JSON-RPC error: %v", rpcResp.Error)
 	}
 
-	if rpcResp.Error != nil {
-		log.Fatalf("JSON-RPC error:", rpcResp.Error)
+	// Checking for id match
+	if rpcResp.ID != id {
+		return nil, fmt.Errorf("got an JSON-RPC error: %v", rpcResp.Error)
 	}
 
 	return &rpcResp, nil

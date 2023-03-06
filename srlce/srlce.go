@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/azyablov/fat/lib"
+	"github.com/azyablov/fat/lib/jrpc"
 	"github.com/scrapli/scrapligo/driver/options"
 	"github.com/scrapli/scrapligo/platform"
 	"github.com/scrapli/scrapligo/response"
@@ -44,10 +45,11 @@ func main() {
 	t.Password = flag.String("password", "admin", "SSH password")
 	t.NoStrictKey = flag.Bool("noSKey", true, "No SSH key checking")
 	f.printTree = flag.Bool("printTree", false, "Print info object tree.")
-	f.jsonRPC = flag.Bool("jsonRPC", false, "Print info object tree.") // Under development, then by default it's set to false.
+	f.jsonRPC = flag.Bool("jsonRPC", false, "Print info object tree.")
 	f.cleanUpClabConfig = flag.Bool("cclab", false, "Clean up clab generated config.")
 
 	t.Hostname = flag.String("target", "", "Target hostname")
+	t.Port = flag.Int("port", 443, "Target port")
 	flag.Parse()
 	// Vars
 
@@ -61,7 +63,7 @@ func main() {
 
 	switch {
 	case len(*t.Hostname) == 0:
-		// TODO: move to sirupsen/logrus
+		// TODO: move to logrus
 		log.Fatalln("hostname is mandatory, but missed")
 	default:
 	}
@@ -69,8 +71,17 @@ func main() {
 	var o *response.Response
 	if *f.jsonRPC {
 		// TODO: (1b) Connecting via JSON-RPC in case SSH failing or JSON-RPC.
-		json
-		//log.Fatalln("Under development.")
+		var resp *jrpc.JSONRpcResponse
+		resp, err := jrpc.ExecCli(t, "show version")
+		if err != nil {
+			log.Fatalf("error while exec cli command: %s", err)
+		}
+		bJSON, err := resp.Result.MarshalJSON()
+		if err != nil {
+			log.Fatalf("unmarshalling error: %s", err)
+		}
+		fmt.Println(string(bJSON))
+		return
 		// TODO: (2a) Downloading file using gNOI
 	} else {
 		// (1a) Connecting via SSH and issue necessary commands
@@ -159,7 +170,8 @@ func main() {
 		}
 		cfg = cfgCClab
 	}
-	// TODO: (5) Saving target configuration
+
+	// (5) Saving target configuration
 	fh, err := os.OpenFile(cfgFileName, os.O_CREATE|os.O_RDWR, 0740)
 	if err != nil {
 		log.Fatalf("can't save config file: %v", err)
@@ -170,7 +182,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't flush config file to disk: %v", err)
 	}
-	// Printing info object Tree
+
+	// (6) Printing info object Tree
 	if *f.printTree && root != nil {
 		lib.PrintInfObjTree(root)
 	}
