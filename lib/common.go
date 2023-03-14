@@ -1,10 +1,22 @@
 package lib
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 type SSHAttr struct {
 	NoStrictKey *bool
 }
+
+type TLSAttr struct {
+	RootCA     *string // CA certificate file in PEM format.
+	Cert       *string // Client certificate file in PEM format.
+	Key        *string // Client private key file.
+	InsecConn  *bool   // Insecure connection.
+	SkipVerify *bool   // Diable certificate validation during TLS session ramp-up.
+}
+
 type Cred struct {
 	Username *string
 	Password *string
@@ -12,13 +24,18 @@ type Cred struct {
 
 type TargetHost struct {
 	Hostname *string
-	Port     *int
+	PortSSH  *int
+	PortgNOI *int
+	PortgNMI *int
+	PortJRpc *int
+	Timeout  *time.Duration
 }
 
 type SRLTarget struct {
 	TargetHost
 	Cred
 	SSHAttr
+	TLSAttr
 }
 
 // Function returns the list of indexes substring within provided string or empty slice, if no substring found.

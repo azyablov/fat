@@ -15,11 +15,15 @@ import (
 )
 
 type Method string
+type OutputFormat string
 
 const (
-	MethodGet Method = "get"
-	MethodSet Method = "set"
-	MethodCli Method = "cli"
+	MethodGet    Method       = "get"
+	MethodSet    Method       = "set"
+	MethodCli    Method       = "cli"
+	OutFormJSON  OutputFormat = "json"
+	OutFormText  OutputFormat = "text"
+	OutFormTable OutputFormat = "table"
 )
 
 // Request definition
@@ -39,8 +43,8 @@ type JSONRpcResponse struct {
 }
 
 type Params struct {
-	Commands     []interface{} `json:"commands"`
-	OutputFormat string        `json:"output-format,omitempty"`
+	Commands  []interface{} `json:"commands"`
+	OutFormat OutputFormat  `json:"output-format,omitempty"`
 }
 
 type RpcError struct {
@@ -49,23 +53,35 @@ type RpcError struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
+func ExecCli(t *lib.SRLTarget, cmd *string, f OutputFormat) (*JSONRpcResponse, error) {
 
-	if len(cmd) == 0 {
-		return nil, fmt.Errorf("command can't be null string")
+	if len(*cmd) == 0 || cmd == nil {
+		return nil, fmt.Errorf("command can't be null string or nil")
+	}
+	var outFormat OutputFormat
+
+	switch f {
+	case OutFormJSON:
+	case OutFormText:
+	case OutFormTable:
+	case "":
+		outFormat = OutFormJSON
+	default:
+		return nil, fmt.Errorf("provided output format isn't supported")
 	}
 
 	// Setting up request,
 	rand.Seed(time.Now().UnixNano())
 	id := rand.Int()
 	var cmds []interface{}
-	cmds = append(cmds, cmd)
+	cmds = append(cmds, *cmd)
 	rpcReq := JSONRpcRequest{
 		JSONRpcVersion: "2.0",
 		ID:             id,
 		Method:         MethodCli,
 		Params: Params{
-			Commands: cmds,
+			Commands:  cmds,
+			OutFormat: outFormat,
 		},
 	}
 	// marshalling to []byte
@@ -74,7 +90,7 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 		log.Fatal(err)
 	}
 	// ... creating an HTTP POST request
-	reqHTTP, err := http.NewRequest("POST", fmt.Sprintf("https://%s:%v/jsonrpc", *t.Hostname, *t.Port), bytes.NewBuffer(bRpcReq))
+	reqHTTP, err := http.NewRequest("POST", fmt.Sprintf("https://%s:%v/jsonrpc", *t.Hostname, *t.PortJRpc), bytes.NewBuffer(bRpcReq))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,15 +131,3 @@ func ExecCli(t *lib.SRLTarget, cmd string) (*JSONRpcResponse, error) {
 
 	return &rpcResp, nil
 }
-
-// {
-// 	"jsonrpc": "2.0",
-// 	"id": 0,
-// 	"method": "cli",
-// 	"params": {
-// 	  "commands": [
-// 		"enter candidate",
-// 		"info interface mgmt0"
-// 	  ]
-// 	}
-//   }
