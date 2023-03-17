@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script used to execute simple integration test for SRLCE
 
-# Set the environment variables
+# Set the environment variables to replace 
 LAB_CA_DIR=~/clab/2node/clab-2nd
 USER=admin
 PASSWORD=admin
