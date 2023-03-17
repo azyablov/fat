@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"encoding/json"
+	"log"
 	"strings"
 	"time"
 )
@@ -54,4 +56,12 @@ func GetSubStrPositions(str string, sub string) []int {
 		i = strings.Index(str[s:], sub)
 	}
 	return subInd
+}
+
+func JSONRawToByte(jRaw *json.RawMessage) []byte {
+	bJSON, err := jRaw.MarshalJSON()
+	if err != nil {
+		log.Fatalf("raw message marshalling error: %s", err)
+	}
+	return bJSON
 }

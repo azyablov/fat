@@ -1,3 +1,5 @@
 yang/
 back/
 cover.*
+*.log
+*.cfg

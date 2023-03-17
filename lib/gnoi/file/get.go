@@ -46,27 +46,97 @@ func GetFile(t *lib.SRLTarget, rFile *string, lFile *string) error {
 	return nil
 }
 
-func GetReader(t *lib.SRLTarget, rFile *string) (io.Reader, error) {
+func grpcSetup(t *lib.SRLTarget) (*grpc.ClientConn, error) {
 
 	// Setting up grpc options
-	dOpts, err := gnmilib.SetupGNMISecureTransport(
-		gnmilib.TLSInit{
-			InsecConn:      *t.InsecConn,
-			SkipVerify:     *t.SkipVerify,
-			TargetHostname: *t.Hostname,
-			RootCA:         *t.RootCA,
-			Cert:           *t.Cert,
-			Key:            *t.Key,
-		})
-	if err != nil {
-		return nil, fmt.Errorf("setting up grpc options: %s", err)
+	var dOpts *[]grpc.DialOption
+	var err error
+	if *t.SkipVerify {
+		dOpts, err = gnmilib.SetupGNMISecureTransport(
+			gnmilib.TLSInit{
+				//			InsecConn:      *t.InsecConn,
+				SkipVerify:     *t.SkipVerify,
+				TargetHostname: *t.Hostname,
+				//			RootCA:         *t.RootCA,
+				//			Cert:           *t.Cert,
+				//			Key:            *t.Key,
+			})
+
+		if err != nil {
+			return nil, fmt.Errorf("setting up grpc options: %s", err)
+		}
+	} else {
+		dOpts, err = gnmilib.SetupGNMISecureTransport(
+			gnmilib.TLSInit{
+				InsecConn:      *t.InsecConn,
+				SkipVerify:     *t.SkipVerify,
+				TargetHostname: *t.Hostname,
+				RootCA:         *t.RootCA,
+				Cert:           *t.Cert,
+				Key:            *t.Key,
+			})
+
+		if err != nil {
+			return nil, fmt.Errorf("setting up grpc options: %s", err)
+		}
 	}
 	// Set up a connection to the server.
 	var host string // target address to connect using grpc.Dial()
 	if strings.Contains(*t.Hostname, ":") {
 		host = *t.Hostname
 	} else {
-		host = fmt.Sprintf("%s:%v", *t.Hostname, t.PortgNOI)
+		host = fmt.Sprintf("%s:%v", *t.Hostname, *t.PortgNOI)
+	}
+
+	// Dialing and getting gRPC connection.
+	gRPCconn, err := grpc.Dial(host, *dOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("can't not connect to the host %s due to %s", *t.Hostname, err)
+	}
+
+	return gRPCconn, nil
+}
+
+func GetReader(t *lib.SRLTarget, rFile *string) (io.Reader, error) {
+
+	// Setting up grpc options
+	var dOpts *[]grpc.DialOption
+	var err error
+	if *t.SkipVerify {
+		dOpts, err = gnmilib.SetupGNMISecureTransport(
+			gnmilib.TLSInit{
+				//			InsecConn:      *t.InsecConn,
+				SkipVerify:     *t.SkipVerify,
+				TargetHostname: *t.Hostname,
+				//			RootCA:         *t.RootCA,
+				//			Cert:           *t.Cert,
+				//			Key:            *t.Key,
+			})
+
+		if err != nil {
+			return nil, fmt.Errorf("setting up grpc options: %s", err)
+		}
+	} else {
+		dOpts, err = gnmilib.SetupGNMISecureTransport(
+			gnmilib.TLSInit{
+				InsecConn:      *t.InsecConn,
+				SkipVerify:     *t.SkipVerify,
+				TargetHostname: *t.Hostname,
+				RootCA:         *t.RootCA,
+				Cert:           *t.Cert,
+				Key:            *t.Key,
+			})
+
+		if err != nil {
+			return nil, fmt.Errorf("setting up grpc options: %s", err)
+		}
+	}
+	// Set up a connection to the server.
+	var host string // target address to connect using grpc.Dial()
+	if strings.Contains(*t.Hostname, ":") {
+		host = *t.Hostname
+	} else {
+		host = fmt.Sprintf("%s:%v", *t.Hostname, *t.PortgNOI)
 	}
 
 	// Dialing and getting gRPC connection.
@@ -144,4 +214,41 @@ func GetReader(t *lib.SRLTarget, rFile *string) (io.Reader, error) {
 
 	return fileBuf, nil
 
+}
+
+func RemoveFile(t *lib.SRLTarget, rFile *string) error {
+	// setup gRPC
+	gRPCconn, err := grpcSetup(t)
+	if err != nil {
+		return err
+	}
+	defer gRPCconn.Close()
+
+	// Creating context with timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), *t.Timeout)
+	defer cancel()
+
+	// Attaching credentials to the context
+	uc := gnmilib.UserCredentials{
+		Username: *t.Username,
+		Password: *t.Password,
+	}
+	// Populating credential in provided context
+	ctx, err = gnmilib.PopulateMDCredentials(ctx, uc)
+	if err != nil {
+		return fmt.Errorf("can't populate context with credentials: %s", err)
+	}
+
+	// Constructing file Remove request
+	fRemReq := new(file.RemoveRequest)
+	fRemReq.RemoteFile = *rFile
+
+	// exec request
+	fClient := file.NewFileClient(gRPCconn)
+	fRemResp, err := fClient.Remove(ctx, fRemReq)
+	if err != nil {
+		return fmt.Errorf("can't exec Remove request: %s", err)
+	}
+	fmt.Println(fRemResp.String())
+	return nil
 }
