@@ -1,10 +1,11 @@
 # Fabric Automation Tools
 It's a pilot project considering to prototype and build swiss-knife tools necessary to manage SR Linux based fabric.
-
-# SR Linux config extractor
-
 While brilliant tools exists, like [gnoic](#gnoic) or [gnmic](#gnmic), which are giving to you almost full flexibility.
 Some practical use-cases may require additional scripting and coding. 
+
+#Tools
+
+## SR Linux config extractor
 
 `srlce` is tool allowing you to extract info object config from SR Linux device using different ways depending what's available to you as interface: SSH / JSON RPC / gNOI.
 On top of that it allows to cleanup [clab](#clab) configuration artifacts related to banner, certificate,... 
