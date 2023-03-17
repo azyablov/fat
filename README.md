@@ -11,7 +11,25 @@ Some practical use-cases may require additional scripting and coding.
 On top of that it allows to cleanup [clab](#clab) configuration artifacts related to banner, certificate,... 
 Utility does not support JSON config, since it can be done via [gnmic](#gnmic) in more robust way.
 
+How to build and use:
+
 ```sh
+azyablov@ecartman test]$ git clone https://github.com/azyablov/fat
+Cloning into 'fat'...
+remote: Enumerating objects: 157, done.
+remote: Counting objects: 100% (157/157), done.
+remote: Compressing objects: 100% (94/94), done.
+remote: Total 157 (delta 63), reused 136 (delta 46), pack-reused 0
+Receiving objects: 100% (157/157), 33.13 MiB | 7.21 MiB/s, done.
+Resolving deltas: 100% (63/63), done.
+[azyablov@ecartman test]$ cd fat/
+.git/  lib/   srlce/ tfsm/  
+[azyablov@ecartman test]$ cd fat/
+.git/  lib/   srlce/ tfsm/  
+[azyablov@ecartman test]$ cd fat/
+.git/  lib/   srlce/ tfsm/  
+[azyablov@ecartman test]$ cd fat/srlce
+[azyablov@ecartman srlce]$ go build srlce.go
 [azyablov@ecartman srlce]$ ./srlce --help
 Usage of ./srlce:
   -InsecConn
