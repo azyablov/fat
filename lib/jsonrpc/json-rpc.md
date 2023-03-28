@@ -49,42 +49,69 @@ classDiagram
     EnumDatastores "1" --o Datastore: OneOf
 
     note for action "Conditional mandatory; used with the set and validate methods."
-    class action {
+    class Action {
         <<element>>
-        +GetAction(): EnumActions
-        +SetAction(a: EnumActions): error
-        #string action
+        ~GetAction(): EnumActions
+        ~SetAction(a: EnumActions): error
+        +string Action
     }
 
     note for datastore "Optional; selects the datastore to perform the method against. CANDIDATE datastore is used if the datastore parameter is not provided."
-    class datastore {
+    class Datastore {
         <<element>>
         +GetDatastore(): EnumDatastores
         +SetDatastore(d: EnumDatastores): error
-        #EnumDatastores datastore
+        +string Datastore
     }
 
     note for Command "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
     class Command {
+        <<interface>>
+        +WithoutRecursion(): Command
+        +WithDefaults(): Command
+        +WithPathKeywords(jsonRawMessage): Command
+        +WithDatastore(EnumDatastores): Command
+        +GetDatastore(): EnumDatastores
+    }
+
+    note for ActCommand "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
+    class ActCommand {
         <<element>>
         note "Mandatory with the get, set and validate methods. This value is a string that follows the gNMI path specification1 in human-readable format."
-        ~string path
+        ~string Path
         note "Optional, since can be embedded into path, for such kind of cases value should not be specified, so path assumed to follow <path>:<value> schema, which will be checked for set and validate"
-        ~string value
+        ~string Value
         note "Optional; used to substitute named parameters with the path field. More than one keyword can be used with each path."
-        ~string pathKeywords
+        ~string PathKeywords
         note "Optional; a Boolean used to retrieve children underneath the specific path. The default = true."
-        ~bool recursive
+        ~bool Recursive
         note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
-        ~bool include-field-defaults
-        ~checkPathValue(): error
+        ~bool Include-field-defaults
         +withoutRecursion(): Command
         +withDefaults(): Command
         +withPathKeywords(jsonRawMessage): Command
         +withDatastore(EnumDatastores): Command
     }
-    Command *-- "1" action
-    Command *-- "1" Datastore
+    ActCommand *-- "1" action
+    ActCommand *-- "1" Datastore
+
+    note for GetCommand "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
+    class GetCommand {
+        <<element>>
+        note "Mandatory with the get, set and validate methods. This value is a string that follows the gNMI path specification1 in human-readable format."
+        ~string Path
+        note "Optional, since can be embedded into path, for such kind of cases value should not be specified, so path assumed to follow <path>:<value> schema, which will be checked for set and validate"
+        ~string PathKeywords
+        note "Optional; a Boolean used to retrieve children underneath the specific path. The default = true."
+        ~bool Recursive
+        note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
+        ~bool Include-field-defaults
+        +WithoutRecursion()
+        +WithDefaults()
+        +WithPathKeywords(jsonRawMessage) error
+        +WithDatastore(EnumDatastores)
+    }
+    GetCommand *-- "1" Datastore
     
     note for outputFormat "Optional. Defines the output format. Output defaults to JSON if not specified."
     class outputFormat {
@@ -111,25 +138,56 @@ classDiagram
     note for method "Mandatory. Supported options are get, set, and validate. "
     class method {
         <<element>>
-        ~getMethod(): EnumMethods
+        ~GetMethod() EnumMethods
         ~setMethod(EnumMethods)s bool
         #String method
     }
 
     note for Request "JSON RPC Request: get / set / validate"
-    class Request {
+    class request {
         <<message>>
         note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
         ~string JSONRpcVersion
         note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
         ~int id
+        +Marshal() List~byte~
+        +GetID() int
     }
-    Request *-- method
-    Request *-- params
+    request *-- method
+    request *-- params
+
+    class Request {
+        <<interface>>
+        +GetAction() EnumActions
+        +GetMethod() EnumMethods
+        +GetFormat() EnumOutputFormats
+        +Marshal() List~byte~
+        +GetID() int
+    }
+
+    class GetRequest {
+        <<message>>
+        note "Method set to GET"
+    }
+    GetRequest *-- "1" request
+
+    class SetRequest {
+        <<message>>
+        note "Method set to SET"
+    }
+    SetRequest *-- "1" request
+
+    class ValidateRequest {
+        <<message>>
+        note "Method set to VALIDATE"
+    }
+    ValidateRequest *-- "1" request
+
     
     note for CLIRequest "JSON RPC Request: cli"
     class CLIRequest {
         <<message>>
+        note "Method set to CLI"
         note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
         ~string JSONRpcVersion
         note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
@@ -155,42 +213,48 @@ classDiagram
         note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
         ~string JSONRpcVersion
         note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
-        ~int id
+        ~int ID
         note "This member is REQUIRED on success. This member MUST NOT exist if there was an error invoking the method. The value of this member is determined by the method invoked on the Server."
-        +jsonRawMessage result
+        +jsonRawMessage Result
         note "This member is REQUIRED on error. This member MUST NOT exist if there was no error triggered during invocation. The value for this member MUST be an Object as defined in section 5.1."
-        +RpcError error
+        +RpcError Error
     }
     Response o-- RpcError
 
     class JSONRPCClient {
         <<entity>>
-        CallMDM(Request r) Response
-        CallCLI(CLIRequest r) Response
+        Call(Request r) Response
     }
 
     class jsonrpc {
         <<module>>
         +NewJSONRPCClient(SRLTarget t) JSONRPCClient
 
-        +NewCLIRequest(List~string~ cmds) CLIRequest
-        +NewGetRequest(List~Command~ cmds) Request
-        +NewSetRequest(List~Command~ cmds) Request
-        +NewValidateRequest(List~Command~ cmds) Request
+        +NewCLIRequest(List~string~ cmds, List~RequestOption~ opts) CLIRequest
+        +NewGetRequest(List~GetCommand~ cmds, List~RequestOption~ opts) GetRequest
+        +NewSetRequest(List~ActCommand~ cmds, List~RequestOption~ opts) SetRequest
+        +NewValidateRequest(List~ActCommand~ cmds, List~RequestOption~ opts) ValidateRequest
 
-        %% MDM Commands
-        +NewGetCommand(string path, List~CommandOptions~ opts) Command
-        +NewCRUDCommand(EnumActions action, string path, string value, List~CommandOptions~ opts) Command
+        +WithOutputFormat(EnumOutputFormats o) RequestOption
+
+        %% Commands
+        +NewGetCmd(string path, List~CommandOptions~ opts) GetCommand
+        +NewActCmd(EnumActions action, string path, string value, List~CommandOptions~ opts) ActCommand
         
-        %% MDM options for GET, SET, VALIDATE
-        +DisableRecursion() CommandOption
-        +EnableDefaults() CommandOption
-        +AddPathKeywords(jsonRawMessage kw) CommandOption
-        +SetDatastore(EnumDatastores d) CommandOption
+        %% Command options for GET, SET, VALIDATE
+        +WithoutRecursion() CommandOption
+        +WithDefaults() CommandOption
+        +WithAddPathKeywords(jsonRawMessage kw) CommandOption
+        +WithDatastore(EnumDatastores d) CommandOption
     }
 
     class CommandOption {
         <<function>>
         (Command c) error
+    }
+
+    class RequestOption {
+        <<function>>
+        (Request c) error
     }
 ```
