@@ -14,7 +14,7 @@ classDiagram
         note "Used to verify that the system accepts a configuration transaction before applying it to the system."
         VALIDATE
     }
-    EnumMethods "1" --o method: is one of
+    EnumMethods "1" --o Method: is one of
 
     class EnumOutputFormats {
         <<enumeration>>
@@ -22,7 +22,7 @@ classDiagram
         TEXT
         TABLE
     }
-    EnumOutputFormats "1" --o outputFormat: OneOf
+    EnumOutputFormats "1" --o OutputFormat: OneOf
 
     class EnumActions {
         <<enumeration>>
@@ -33,7 +33,7 @@ classDiagram
         note "Deletes a leaf or container. All children beneath the parent are removed from the system."
         DELETE
     }
-    EnumActions "1" --o action: OneOf
+    EnumActions "1" --o Action: OneOf
 
     class EnumDatastores {
         <<enumeration>>
@@ -67,10 +67,10 @@ classDiagram
     note for Command "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
     class Command {
         <<interface>>
-        +WithoutRecursion(): Command
-        +WithDefaults(): Command
-        +WithPathKeywords(jsonRawMessage): Command
-        +WithDatastore(EnumDatastores): Command
+        +withoutRecursion(): Command
+        +withDefaults(): Command
+        +withPathKeywords(jsonRawMessage): Command
+        +withDatastore(EnumDatastores): Command
         +GetDatastore(): EnumDatastores
     }
 
@@ -114,49 +114,49 @@ classDiagram
     GetCommand *-- "1" Datastore
     
     note for outputFormat "Optional. Defines the output format. Output defaults to JSON if not specified."
-    class outputFormat {
+    class OutputFormat {
         <<element>>
-        +GetFormat() EnumOutputFormats
+        +GetFormat() string
         +SetFormat(EnumOutputFormats of) error
-        #EnumOutputFormats outputFormat
+        #string OutputFormat
     }
 
     note for params "MAY be omitted. Defines a container for any parameters related to the request. The type of parameter is dependent on the method used."
-    class params {
+    class Params {
         <<element>>
         ~List~Command~ commands
     }
-    params *-- outputFormat
+    Params *-- OutputFormat
 
-    class cliParams {
+    class CLIParams {
         <<element>>
         ~List~string~ commands
     }
-    cliParams *-- outputFormat
+    CLIParams *-- OutputFormat
     
     
     note for method "Mandatory. Supported options are get, set, and validate. "
-    class method {
+    class Method {
         <<element>>
-        ~GetMethod() EnumMethods
-        ~setMethod(EnumMethods)s bool
-        #String method
+        ~GetMethod() string
+        ~SetMethod(EnumMethods) bool
+        #string Method
     }
 
     note for Request "JSON RPC Request: get / set / validate"
-    class request {
+    class Request {
         <<message>>
         note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
         ~string JSONRpcVersion
         note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
-        ~int id
+        ~int ID
         +Marshal() List~byte~
         +GetID() int
     }
-    request *-- method
-    request *-- params
+    Request *-- Method
+    Request *-- Params
 
-    class Request {
+    class Requester {
         <<interface>>
         +GetAction() EnumActions
         +GetMethod() EnumMethods
@@ -195,7 +195,7 @@ classDiagram
         note "Mandatory. Supported options are cli. Set statically in the RPC request"
     }
     CLIRequest *-- method
-    CLIRequest *-- cliParams
+    CLIRequest *-- CLIParams
 
     note for RpcError "When a rpc call is made, the Server MUST reply with a Response, except for in the case of Notifications. The Response is expressed as a single JSON Object"
     class RpcError {
@@ -223,7 +223,7 @@ classDiagram
 
     class JSONRPCClient {
         <<entity>>
-        Call(Request r) Response
+        Call(Requester r) Response
     }
 
     class jsonrpc {
@@ -235,7 +235,7 @@ classDiagram
         +NewSetRequest(List~ActCommand~ cmds, List~RequestOption~ opts) SetRequest
         +NewValidateRequest(List~ActCommand~ cmds, List~RequestOption~ opts) ValidateRequest
 
-        +WithOutputFormat(EnumOutputFormats o) RequestOption
+        +WithOutputFormat(EnumOutputFormats of) RequestOption
 
         %% Commands
         +NewGetCmd(string path, List~CommandOptions~ opts) GetCommand

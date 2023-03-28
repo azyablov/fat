@@ -12,6 +12,14 @@ const (
 	VALIDATE
 )
 
+// note for method "Mandatory. Supported options are get, set, and validate. "
+// class method {
+// 	<<element>>
+// 	~GetMethod() string
+// 	~SetMethod(EnumMethods) bool
+// 	+string Method
+// }
+
 type Method struct {
 	Method string `json:"method"`
 }

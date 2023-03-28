@@ -14,7 +14,7 @@ const (
 )
 
 type Action struct {
-	Action string `json:"action"`
+	Action string `json:"action,omitempty"`
 }
 
 func (a *Action) GetAction() (string, error) {
