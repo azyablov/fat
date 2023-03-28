@@ -4,6 +4,19 @@ import "fmt"
 
 type EnumDatastores int
 
+//	class EnumDatastores {
+//		<<enumeration>>
+//		note "Used to change the configuration of the system with the get, set, and validate methods; default datastore is used if the datastore parameter is not provided."
+//		CANDIDATE
+//		note "Used to retrieve the active configuration with the get method."
+//		RUNNING
+//		note "Used to retrieve the running (active) configuration along with the operational state."
+//		STATE
+//		note "Used to perform operational tasks on the system; only supported with the update action command and the set method."
+//		TOOLS
+//	}
+//
+// EnumDatastores "1" --o Datastore: OneOf
 const (
 	CANDIDATE EnumDatastores = iota
 	RUNNING
@@ -11,6 +24,14 @@ const (
 	TOOLS
 )
 
+// note for datastore "Optional; selects the datastore to perform the method against. CANDIDATE datastore is used if the datastore parameter is not provided."
+//
+//	class Datastore {
+//		<<element>>
+//		+GetDatastore(): EnumDatastores
+//		+SetDatastore(d: EnumDatastores): error
+//		+string Datastore
+//	}
 type Datastore struct {
 	Datastore string `json:"datastore,omitempty"`
 }

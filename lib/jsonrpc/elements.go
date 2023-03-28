@@ -3,63 +3,53 @@ package jsonrpc
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/azyablov/fat/lib/jsonrpc/datastores"
 	"github.com/azyablov/fat/lib/jsonrpc/formats"
+	"github.com/azyablov/fat/lib/jsonrpc/methods"
+	"github.com/openconfig/gnmic/actions"
 )
 
-//	class Command {
-//		<<interface>>
-//		+WithoutRecursion(): Command
-//		+WithDefaults(): Command
-//		+WithPathKeywords(jsonRawMessage): Command
-//		+WithDatastore(EnumDatastores): Command
-//		+GetDatastore(): EnumDatastores
-//	}
-type Command interface {
-	withoutRecursion() Command
-	withDefaults() Command
-	withPathKeywords(json.RawMessage) Command
-	withDatastore(datastores.EnumDatastores) Command
-	GetDatastore() Command
-}
-
-// note for GetCommand "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
+// note for Command "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
 //
-//	class GetCommand {
+//	class Command {
 //		<<element>>
 //		note "Mandatory with the get, set and validate methods. This value is a string that follows the gNMI path specification1 in human-readable format."
 //		~string Path
-//		note "Optional, since can be embedded into path, for such kind of cases value should not be specified, so path assumed to follow <path>:<value> schema, which will be checked for set and validate"
+//		note "Optional; used to substitute named parameters with the path field. More than one keyword can be used with each path."
 //		~string PathKeywords
 //		note "Optional; a Boolean used to retrieve children underneath the specific path. The default = true."
 //		~bool Recursive
 //		note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
 //		~bool Include-field-defaults
-//		+WithoutRecursion()
-//		+WithDefaults()
-//		+WithPathKeywords(jsonRawMessage) error
-//		+WithDatastore(EnumDatastores)
+//		+withoutRecursion(): Command
+//		+withDefaults(): Command
+//		+withPathKeywords(jsonRawMessage): Command
+//		+withDatastore(EnumDatastores): Command
 //	}
 //
-// GetCommand *-- "1" Datastore
-type GetCommand struct {
+// Command *-- "1" Datastore
+type Command struct {
 	Path                 string          `json:"path"`
+	Value                string          `json:"value,omitempty"`
 	PathKeywords         json.RawMessage `json:"path-keywords,omitempty"`
 	Recursive            bool            `json:"recursive,omitempty"`
 	IncludeFieldDefaults bool            `json:"include-field-defaults,omitempty"`
+	actions.Action
 	datastores.Datastore
 }
 
-func (c *GetCommand) withoutRecursion() {
+func (c *Command) withoutRecursion() {
 	c.Recursive = false
 }
 
-func (c *GetCommand) withDefaults() {
+func (c *Command) withDefaults() {
 	c.IncludeFieldDefaults = true
 }
 
-func (c *GetCommand) withPathKeywords(jrm json.RawMessage) error {
+func (c *Command) withPathKeywords(jrm json.RawMessage) error {
 	var data interface{}
 	err := json.Unmarshal(jrm, &data)
 	if err != nil {
@@ -69,7 +59,7 @@ func (c *GetCommand) withPathKeywords(jrm json.RawMessage) error {
 	return nil
 }
 
-func (c *GetCommand) withDatastore(ds datastores.EnumDatastores) error {
+func (c *Command) withDatastore(ds datastores.EnumDatastores) error {
 	return c.SetDatastore(ds)
 }
 
@@ -78,6 +68,7 @@ func (c *GetCommand) withDatastore(ds datastores.EnumDatastores) error {
 //	class Params {
 //		<<element>>
 //		~List~Command~ commands
+//		+appendCommands(List~Command~)
 //	}
 //
 // Params *-- OutputFormat
@@ -86,15 +77,24 @@ type Params struct {
 	formats.OutputFormat
 }
 
+func (p *Params) appendCommands(commands []Command) {
+	p.Commands = append(p.Commands, commands...)
+}
+
 //	class CLIParams {
 //		<<element>>
 //		~List~string~ commands
+//		+appendCommands(List~string~)
 //	}
 //
 // CLIParams *-- OutputFormat
 type CLIParams struct {
 	Commands []string `json:"commands"`
 	formats.OutputFormat
+}
+
+func (p *CLIParams) appendCommands(commands []string) {
+	p.Commands = append(p.Commands, commands...)
 }
 
 // note for RpcError "When a rpc call is made, the Server MUST reply with a Response, except for in the case of Notifications. The Response is expressed as a single JSON Object"
@@ -112,4 +112,145 @@ type RpcError struct {
 	ID      int    `json:"id"`
 	Message string `json:"message"`
 	Data    string `json:"data,omitempty"`
+}
+
+//	class Requester {
+//		<<interface>>
+//		+GetMethod() string
+//		+Marshal() List~byte~
+//		+GetID() int
+//	}
+type Requester interface {
+	GetMethod() string
+	Marshal() ([]byte, error)
+	GetID() int
+	setID(int)
+	appendCommands([]Command)
+	//TODO: extend interface for options!!!
+}
+
+// note for Request "JSON RPC Request: get / set / validate"
+//
+//	class Request {
+//		<<message>>
+//		note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
+//		~string JSONRpcVersion
+//		note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
+//		~int ID
+//		+Marshal() List~byte~
+//		+GetID() int
+//	}
+//
+// Request *-- Method
+// Request *-- Params
+type Request struct {
+	JSONRpcVersion string `json:"jsonrpc"`
+	ID             int    `json:"id"`
+	methods.Method
+	Params
+	//TODO: extend struct for options!!!
+}
+
+func (r *Request) Marshal() ([]byte, error) {
+	b, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func (r *Request) GetID() int {
+	return r.ID
+}
+
+func (r *Request) GetMethod() string {
+	return r.Method.GetMethod()
+}
+
+func (r *Request) setID(id int) {
+	r.ID = id
+}
+
+//	class RequestOption {
+//		<<function>>
+//		(Request c) error
+//	}
+type RequestOption func(Requester) error
+
+//	class GetRequest {
+//		<<message>>
+//		note "Method set to GET"
+//	}
+//
+// GetRequest *-- "1" Request
+type GetRequest struct {
+	Request
+}
+
+// +NewGetRequest(List~GetCommand~ cmds, List~RequestOption~ opts) GetRequest
+func NewGetRequest(cmds []Command, opts ...RequestOption) (*GetRequest, error) {
+	r := &GetRequest{}
+	r.Method.SetMethod(methods.GET)
+	err := apply_opts_and_cmds(r, cmds, opts)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+//	class SetRequest {
+//		<<message>>
+//		note "Method set to SET"
+//	}
+//
+// SetRequest *-- "1" Request
+type SetRequest struct {
+	Request
+}
+
+// +NewSetRequest(List~SetCommand~ cmds, List~RequestOption~ opts) SetRequest
+func NewSetRequest(cmds []Command, opts ...RequestOption) (*SetRequest, error) {
+	r := &SetRequest{}
+	r.Method.SetMethod(methods.SET)
+
+	err := apply_opts_and_cmds(r, cmds, opts)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+//	class ValidateRequest {
+//		<<message>>
+//		note "Method set to VALIDATE"
+//	}
+//
+// ValidateRequest *-- "1" Request
+type ValidateRequest struct {
+	Request
+}
+
+// +NewValidateRequest(List~ValidateCommand~ cmds, List~RequestOption~ opts) ValidateRequest
+func NewValidateRequest(cmds []Command, opts ...RequestOption) (*ValidateRequest, error) {
+	r := &ValidateRequest{}
+	r.Method.SetMethod(methods.VALIDATE)
+
+	err := apply_opts_and_cmds(r, cmds, opts)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func apply_opts_and_cmds(r Requester, cmds []Command, opts []RequestOption) error {
+	rand.Seed(time.Now().UnixNano())
+	id := rand.Int()
+	r.setID(id)
+	r.appendCommands(cmds)
+	for _, o := range opts {
+		if err := o(r); err != nil {
+			return nil
+		}
+	}
+	return nil
 }

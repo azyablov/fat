@@ -4,6 +4,19 @@ import "fmt"
 
 type EnumMethods int
 
+//	class EnumMethods {
+//		<<enumeration>>
+//		note "Used to retrieve configuration and state details from the system. The get method can be used with candidate, running, and state datastores, but cannot be used with the tools datastore."
+//		GET
+//		note "Used to set a configuration or run operational transaction. The set method can be used with the candidate and tools datastores."
+//		SET
+//		note "Used to run CLI commands. The get and set methods are restricted to accessing data structures via the YANG models, but the cli method can access any commands added to the system via python plug-ins or aliases."
+//		CLI
+//		note "Used to verify that the system accepts a configuration transaction before applying it to the system."
+//		VALIDATE
+//	}
+//
+// EnumMethods "1" --o Method: is one of
 const (
 	_               = iota
 	GET EnumMethods = iota + 1
@@ -13,13 +26,13 @@ const (
 )
 
 // note for method "Mandatory. Supported options are get, set, and validate. "
-// class method {
-// 	<<element>>
-// 	~GetMethod() string
-// 	~SetMethod(EnumMethods) bool
-// 	+string Method
-// }
-
+//
+//	class method {
+//		<<element>>
+//		~GetMethod() string
+//		~SetMethod(EnumMethods) bool
+//		+string Method
+//	}
 type Method struct {
 	Method string `json:"method"`
 }

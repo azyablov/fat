@@ -66,16 +66,6 @@ classDiagram
 
     note for Command "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
     class Command {
-        <<interface>>
-        +withoutRecursion(): Command
-        +withDefaults(): Command
-        +withPathKeywords(jsonRawMessage): Command
-        +withDatastore(EnumDatastores): Command
-        +GetDatastore(): EnumDatastores
-    }
-
-    note for ActCommand "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
-    class ActCommand {
         <<element>>
         note "Mandatory with the get, set and validate methods. This value is a string that follows the gNMI path specification1 in human-readable format."
         ~string Path
@@ -87,31 +77,14 @@ classDiagram
         ~bool Recursive
         note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
         ~bool Include-field-defaults
-        +withoutRecursion(): Command
-        +withDefaults(): Command
-        +withPathKeywords(jsonRawMessage): Command
-        +withDatastore(EnumDatastores): Command
+        +withoutRecursion()
+        +withDefaults()
+        +withPathKeywords(jsonRawMessage) error
+        +withDatastore(EnumDatastores)
+        +GetDatastore() string
     }
-    ActCommand *-- "1" action
-    ActCommand *-- "1" Datastore
-
-    note for GetCommand "Mandatory. List of commands used to execute against the called method. Multiple commands can be executed with a single request."
-    class GetCommand {
-        <<element>>
-        note "Mandatory with the get, set and validate methods. This value is a string that follows the gNMI path specification1 in human-readable format."
-        ~string Path
-        note "Optional, since can be embedded into path, for such kind of cases value should not be specified, so path assumed to follow <path>:<value> schema, which will be checked for set and validate"
-        ~string PathKeywords
-        note "Optional; a Boolean used to retrieve children underneath the specific path. The default = true."
-        ~bool Recursive
-        note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
-        ~bool Include-field-defaults
-        +WithoutRecursion()
-        +WithDefaults()
-        +WithPathKeywords(jsonRawMessage) error
-        +WithDatastore(EnumDatastores)
-    }
-    GetCommand *-- "1" Datastore
+    Command *-- "1" Action
+    Command *-- "1" Datastore
     
     note for outputFormat "Optional. Defines the output format. Output defaults to JSON if not specified."
     class OutputFormat {
@@ -125,12 +98,14 @@ classDiagram
     class Params {
         <<element>>
         ~List~Command~ commands
+        +appendCommands(List~Command~)
     }
     Params *-- OutputFormat
 
     class CLIParams {
         <<element>>
         ~List~string~ commands
+        +appendCommands(List~string~)
     }
     CLIParams *-- OutputFormat
     
@@ -158,9 +133,7 @@ classDiagram
 
     class Requester {
         <<interface>>
-        +GetAction() EnumActions
-        +GetMethod() EnumMethods
-        +GetFormat() EnumOutputFormats
+        +GetMethod() string
         +Marshal() List~byte~
         +GetID() int
     }
@@ -169,19 +142,19 @@ classDiagram
         <<message>>
         note "Method set to GET"
     }
-    GetRequest *-- "1" request
+    GetRequest *-- "1" Request
 
     class SetRequest {
         <<message>>
         note "Method set to SET"
     }
-    SetRequest *-- "1" request
+    SetRequest *-- "1" Request
 
     class ValidateRequest {
         <<message>>
         note "Method set to VALIDATE"
     }
-    ValidateRequest *-- "1" request
+    ValidateRequest *-- "1" Request
 
     
     note for CLIRequest "JSON RPC Request: cli"
@@ -238,8 +211,7 @@ classDiagram
         +WithOutputFormat(EnumOutputFormats of) RequestOption
 
         %% Commands
-        +NewGetCmd(string path, List~CommandOptions~ opts) GetCommand
-        +NewActCmd(EnumActions action, string path, string value, List~CommandOptions~ opts) ActCommand
+        +NewCommand(EnumActions action, string path, string value, List~CommandOptions~ opts) Command
         
         %% Command options for GET, SET, VALIDATE
         +WithoutRecursion() CommandOption
@@ -255,6 +227,6 @@ classDiagram
 
     class RequestOption {
         <<function>>
-        (Request c) error
+        (Requester c) error
     }
 ```
