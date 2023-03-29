@@ -36,20 +36,25 @@ type Datastore struct {
 	Datastore string `json:"datastore,omitempty"`
 }
 
-func (d *Datastore) GetDatastore() (string, error) {
+func (d *Datastore) GetDatastore() (EnumDatastores, error) {
+	var rd EnumDatastores
 	switch d.Datastore {
 	case "candidate":
+		rd = CANDIDATE
 		break
 	case "running":
+		rd = RUNNING
 		break
 	case "state":
+		rd = STATE
 		break
 	case "tools":
+		rd = TOOLS
 		break
 	default:
-		return "", fmt.Errorf("datastore isn't set properly, while should be CANDIDATE / RUNNING / STATE / TOOLS")
+		return rd, fmt.Errorf("datastore isn't set properly, while should be CANDIDATE / RUNNING / STATE / TOOLS")
 	}
-	return d.Datastore, nil
+	return rd, nil
 }
 
 func (d *Datastore) SetDatastore(rd EnumDatastores) error {

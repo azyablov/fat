@@ -77,11 +77,10 @@ classDiagram
         ~bool Recursive
         note "Optional; a Boolean used to show all fields, regardless if they have a directory configured or are operating at their default setting. The default = false."
         ~bool Include-field-defaults
-        +withoutRecursion()
-        +withDefaults()
-        +withPathKeywords(jsonRawMessage) error
-        +withDatastore(EnumDatastores)
-        +GetDatastore() string
+        ~withoutRecursion()
+        ~withDefaults()
+        ~withPathKeywords(jsonRawMessage) error
+        ~withDatastore(EnumDatastores)
     }
     Command *-- "1" Action
     Command *-- "1" Datastore
@@ -89,7 +88,7 @@ classDiagram
     note for outputFormat "Optional. Defines the output format. Output defaults to JSON if not specified."
     class OutputFormat {
         <<element>>
-        +GetFormat() string
+        +GetFormat() EnumOutputFormats
         +SetFormat(EnumOutputFormats of) error
         #string OutputFormat
     }
@@ -97,8 +96,9 @@ classDiagram
     note for params "MAY be omitted. Defines a container for any parameters related to the request. The type of parameter is dependent on the method used."
     class Params {
         <<element>>
-        ~List~Command~ commands
+        ~List~Command~ Commands
         +appendCommands(List~Command~)
+        ~getCmds() List~Command~
     }
     Params *-- OutputFormat
 
@@ -113,7 +113,7 @@ classDiagram
     note for method "Mandatory. Supported options are get, set, and validate. "
     class Method {
         <<element>>
-        ~GetMethod() string
+        ~GetMethod() EnumMethods
         ~SetMethod(EnumMethods) bool
         #string Method
     }
@@ -138,25 +138,6 @@ classDiagram
         +GetID() int
     }
 
-    class GetRequest {
-        <<message>>
-        note "Method set to GET"
-    }
-    GetRequest *-- "1" Request
-
-    class SetRequest {
-        <<message>>
-        note "Method set to SET"
-    }
-    SetRequest *-- "1" Request
-
-    class ValidateRequest {
-        <<message>>
-        note "Method set to VALIDATE"
-    }
-    ValidateRequest *-- "1" Request
-
-    
     note for CLIRequest "JSON RPC Request: cli"
     class CLIRequest {
         <<message>>
@@ -164,10 +145,13 @@ classDiagram
         note "Mandatory. Version, which must be ‟2.0”. No other JSON RPC versions are currently supported."
         ~string JSONRpcVersion
         note "Mandatory. Client-provided integer. The JSON RPC responds with the same ID, which allows the client to match requests to responses when there are concurrent requests."
-        ~int id
+        ~int ID
         note "Mandatory. Supported options are cli. Set statically in the RPC request"
+        +Marshal() List~byte~
+        +GetID() int
+        ~setID(int)
     }
-    CLIRequest *-- method
+    CLIRequest *-- Method
     CLIRequest *-- CLIParams
 
     note for RpcError "When a rpc call is made, the Server MUST reply with a Response, except for in the case of Notifications. The Response is expressed as a single JSON Object"
@@ -199,19 +183,23 @@ classDiagram
         Call(Requester r) Response
     }
 
+    class CommandValue {
+        <<element>>
+        string
+    }
+
     class jsonrpc {
         <<module>>
         +NewJSONRPCClient(SRLTarget t) JSONRPCClient
 
         +NewCLIRequest(List~string~ cmds, List~RequestOption~ opts) CLIRequest
-        +NewGetRequest(List~GetCommand~ cmds, List~RequestOption~ opts) GetRequest
-        +NewSetRequest(List~ActCommand~ cmds, List~RequestOption~ opts) SetRequest
-        +NewValidateRequest(List~ActCommand~ cmds, List~RequestOption~ opts) ValidateRequest
+        +NewRequest(EnumMethods m, List~GetCommand~ cmds, List~RequestOption~ opts) Request
+
 
         +WithOutputFormat(EnumOutputFormats of) RequestOption
 
         %% Commands
-        +NewCommand(EnumActions action, string path, string value, List~CommandOptions~ opts) Command
+        +NewCommand(EnumActions action, string path, CommandValue value, List~CommandOptions~ opts) Command
         
         %% Command options for GET, SET, VALIDATE
         +WithoutRecursion() CommandOption

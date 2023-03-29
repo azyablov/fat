@@ -18,8 +18,8 @@ type EnumActions int
 //
 // EnumActions "1" --o Action: OneOf
 const (
-	_                   = iota
-	REPLACE EnumActions = iota + 1
+	INVALID_ACTION             = iota
+	REPLACE        EnumActions = iota + 1
 	UPDATE
 	DELETE
 )
@@ -36,18 +36,22 @@ type Action struct {
 	Action string `json:"action"`
 }
 
-func (a *Action) GetAction() (string, error) {
+func (a *Action) GetAction() (EnumActions, error) {
+	var ra EnumActions
 	switch a.Action {
 	case "replace":
+		ra = REPLACE
 		break
 	case "update":
+		ra = UPDATE
 		break
 	case "delete":
+		ra = DELETE
 		break
 	default:
-		return "", fmt.Errorf("action isn't set properly, while should be REPLACE / UPDATE / DELETE")
+		return ra, fmt.Errorf("action isn't set properly, while should be REPLACE / UPDATE / DELETE")
 	}
-	return a.Action, nil
+	return ra, nil
 }
 
 func (a *Action) SetAction(ra EnumActions) error {

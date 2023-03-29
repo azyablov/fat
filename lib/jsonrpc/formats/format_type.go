@@ -22,7 +22,7 @@ const (
 //
 //	class OutputFormat {
 //		<<element>>
-//		+GetFormat() string
+//		+GetFormat() EnumOutputFormats
 //		+SetFormat(EnumOutputFormats of) error
 //		#string OutputFormat
 //	}
@@ -30,20 +30,25 @@ type OutputFormat struct {
 	OutputFormat string `json:"output-format,omitempty"`
 }
 
-func (of *OutputFormat) GetFormat() string {
+func (of *OutputFormat) GetFormat() (EnumOutputFormats, error) {
+	var rf EnumOutputFormats
 	switch of.OutputFormat {
 	case "json":
+		rf = JSON
 		break
 	case "xml":
+		rf = XML
 		break
 	case "table":
+		rf = TABLE
 		break
 	case "":
+		rf = JSON
 		break
 	default:
-		return fmt.Sprintf("output format isn't set properly, while should be JSON / XML / TABLE, but is %s", of.OutputFormat)
+		return rf, fmt.Errorf("output format isn't set properly, while should be JSON / XML / TABLE")
 	}
-	return of.OutputFormat
+	return rf, nil
 }
 
 func (of *OutputFormat) SetFormat(ofs EnumOutputFormats) error {

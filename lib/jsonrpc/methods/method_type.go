@@ -18,8 +18,8 @@ type EnumMethods int
 //
 // EnumMethods "1" --o Method: is one of
 const (
-	_               = iota
-	GET EnumMethods = iota + 1
+	INVALID_METHOD             = iota
+	GET            EnumMethods = iota + 1
 	SET
 	CLI
 	VALIDATE
@@ -29,7 +29,7 @@ const (
 //
 //	class method {
 //		<<element>>
-//		~GetMethod() string
+//		~GetMethod() EnumMethods
 //		~SetMethod(EnumMethods) bool
 //		+string Method
 //	}
@@ -37,20 +37,25 @@ type Method struct {
 	Method string `json:"method"`
 }
 
-func (m *Method) GetMethod() (string, error) {
+func (m *Method) GetMethod() (EnumMethods, error) {
+	var rm EnumMethods
 	switch m.Method {
 	case "get":
+		rm = GET
 		break
 	case "set":
+		rm = SET
 		break
 	case "cli":
+		rm = CLI
 		break
 	case "validate":
+		rm = VALIDATE
 		break
 	default:
-		return "", fmt.Errorf("method isn't set properly, while should be GET / SET / CLI / VALIDATE")
+		return rm, fmt.Errorf("method isn't set properly, while should be GET / SET / CLI / VALIDATE")
 	}
-	return m.Method, nil
+	return rm, nil
 }
 
 func (m *Method) SetMethod(rm EnumMethods) error {
@@ -71,4 +76,11 @@ func (m *Method) SetMethod(rm EnumMethods) error {
 		return fmt.Errorf("method provided isn't correct, while should be GET / SET / CLI / VALIDATE")
 	}
 	return nil
+}
+
+func (m *Method) MethodName() string {
+	if m.Method == "" {
+		return "INVALID_METHOD"
+	}
+	return m.Method
 }
