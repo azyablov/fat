@@ -65,7 +65,7 @@ func (c *Command) withPathKeywords(jrm json.RawMessage) error {
 }
 
 func (c *Command) withDatastore(ds datastores.EnumDatastores) error {
-	return c.Datastore.DSetDatastore(ds)
+	return c.Datastore.SetDatastore(ds)
 }
 
 //	class CommandOption {
@@ -251,12 +251,12 @@ func apply_cmds(r *Request, cmds []Command) error {
 			}
 		}
 		break
-	case methods.SET || methods.VALIDATE:
+	case methods.SET, methods.VALIDATE:
 		for _, c := range cmds {
 			if c.Action == nil {
 				return fmt.Errorf("action not found, but should be specified for method %s", r.Method.MethodName())
 			}
-			if c.Value == "" && !strings.Contains(c.Action, ":") {
+			if c.Value == "" && !strings.Contains(c.Action.Action, ":") {
 				return fmt.Errorf("value isn't specified or not found in the path for method %s", r.Method.MethodName())
 			}
 		}
