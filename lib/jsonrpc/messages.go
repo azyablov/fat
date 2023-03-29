@@ -99,6 +99,36 @@ func NewCommand(action actions.EnumActions, path string, value CommandValue, opt
 	return c, nil
 }
 
+// +WithoutRecursion() CommandOption
+func WithoutRecursion() CommandOptions {
+	return func(c *Command) error {
+		c.withoutRecursion()
+		return nil
+	}
+}
+
+// +WithDefaults() CommandOption
+func WithDefaults() CommandOptions {
+	return func(c *Command) error {
+		c.withDefaults()
+		return nil
+	}
+}
+
+// +WithAddPathKeywords(jsonRawMessage kw) CommandOption
+func WithAddPathKeywords(kw json.RawMessage) CommandOptions {
+	return func(c *Command) error {
+		return c.withPathKeywords(kw)
+	}
+}
+
+// +WithDatastore(EnumDatastores d) CommandOption
+func WithDatastore(d datastores.EnumDatastores) CommandOptions {
+	return func(c *Command) error {
+		return c.withDatastore(d)
+	}
+}
+
 // note for params "MAY be omitted. Defines a container for any parameters related to the request. The type of parameter is dependent on the method used."
 //
 //	class Params {
@@ -176,6 +206,10 @@ func (r *Request) setID(id int) {
 	r.ID = id
 }
 
+func (r *Request) SetOutputFormat(of formats.EnumOutputFormats) error {
+	return r.Params.OutputFormat.SetFormat(of)
+}
+
 //	class Requester {
 //		<<interface>>
 //		+GetMethod() string
@@ -187,6 +221,7 @@ type Requester interface {
 	GetMethod() (methods.EnumMethods, error)
 	MethodName() string
 	GetID() int
+	SetOutputFormat(of formats.EnumOutputFormats) error
 	appendCommands([]Command)
 	setID(int)
 }
@@ -196,6 +231,13 @@ type Requester interface {
 //		(Request c) error
 //	}
 type RequestOption func(Requester) error
+
+// +WithOutputFormat(EnumOutputFormats of) RequestOption
+func WithOutputFormat(of formats.EnumOutputFormats) RequestOption {
+	return func(r Requester) error {
+		return r.SetOutputFormat(of)
+	}
+}
 
 // +NewRequest(EnumMethods m, List~GetCommand~ cmds, List~RequestOption~ opts) Request
 func NewRequest(m methods.EnumMethods, cmds []Command, opts ...RequestOption) (*Request, error) {
@@ -339,6 +381,10 @@ func (r *CLIRequest) GetID() int {
 
 func (r *CLIRequest) setID(id int) {
 	r.ID = id
+}
+
+func (r *CLIRequest) SetOutputFormat(of formats.EnumOutputFormats) error {
+	return r.CLIParams.OutputFormat.SetFormat(of)
 }
 
 // +NewCLIRequest(List~string~ cmds, List~RequestOption~ opts) CLIRequest
