@@ -18,11 +18,11 @@ type EnumMethods int
 //
 // EnumMethods "1" --o Method: is one of
 const (
-	INVALID_METHOD             = iota
-	GET            EnumMethods = iota + 1
-	SET
-	CLI
-	VALIDATE
+	INVALID_METHOD EnumMethods = iota
+	GET                        // note "Used to retrieve configuration and state details from the system. The get method can be used with candidate, running, and state datastores, but cannot be used with the tools datastore."
+	SET                        // note "Used to set a configuration or run operational transaction. The set method can be used with the candidate and tools datastores."
+	CLI                        // note "Used to run CLI commands. The get and set methods are restricted to accessing data structures via the YANG models, but the cli method can access any commands added to the system via python plug-ins or aliases."
+	VALIDATE                   // note "Used to verify that the system accepts a configuration transaction before applying it to the system."
 )
 
 // note for method "Mandatory. Supported options are get, set, and validate. "
