@@ -1,8 +1,0 @@
-github.com/azyablov/fat/lib/jsonrpc/actions v0.0.0-20230329200223-f5f80b31c16f h1:pMVXmacK/TYi17uvGofpmmpLdmEx1XClYP73Ksr4J74=
-github.com/azyablov/fat/lib/jsonrpc/actions v0.0.0-20230329200223-f5f80b31c16f/go.mod h1:VOKrrfyRqNpkkYub5zl+3jKjISF3fRgw5UnPIzTcfuQ=
-github.com/azyablov/fat/lib/jsonrpc/datastores v0.0.0-20230329200223-f5f80b31c16f h1:f/q6NnVhl8xPSHPlB0pFJwqgWDcMdFNEdK154Mci5zo=
-github.com/azyablov/fat/lib/jsonrpc/datastores v0.0.0-20230329200223-f5f80b31c16f/go.mod h1:zS4l3h4D9TJem/U7FZ4sDa0VZ/+jUVXzi9zZOOYmW8M=
-github.com/azyablov/fat/lib/jsonrpc/formats v0.0.0-20230329202034-206512b02a01 h1:ispeOCOkK/bs4atg9F7XR3wVbXsbHlUYAOn78O5xESM=
-github.com/azyablov/fat/lib/jsonrpc/formats v0.0.0-20230329202034-206512b02a01/go.mod h1:KZcRIhS8T82XpC6BcwgnvYIvkq59hYBcWCPVOjCjg4w=
-github.com/azyablov/fat/lib/jsonrpc/methods v0.0.0-20230329202034-206512b02a01 h1:gAmkR4xCbPOhe8P8pVbZn+EHUUDppUCfjmgt0EnAfvI=
-github.com/azyablov/fat/lib/jsonrpc/methods v0.0.0-20230329202034-206512b02a01/go.mod h1:y8AbPwqzOqc6E6WshFHcgmtsNbKxIoKFsipUyn9M9SA=

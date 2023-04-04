@@ -1,10 +1,2 @@
-github.com/azyablov/fat/lib/jsonrpc/actions v0.0.0-20230329200223-f5f80b31c16f h1:pMVXmacK/TYi17uvGofpmmpLdmEx1XClYP73Ksr4J74=
-github.com/azyablov/fat/lib/jsonrpc/actions v0.0.0-20230329200223-f5f80b31c16f/go.mod h1:VOKrrfyRqNpkkYub5zl+3jKjISF3fRgw5UnPIzTcfuQ=
-github.com/azyablov/fat/lib/jsonrpc/datastores v0.0.0-20230329200223-f5f80b31c16f h1:f/q6NnVhl8xPSHPlB0pFJwqgWDcMdFNEdK154Mci5zo=
-github.com/azyablov/fat/lib/jsonrpc/datastores v0.0.0-20230329200223-f5f80b31c16f/go.mod h1:zS4l3h4D9TJem/U7FZ4sDa0VZ/+jUVXzi9zZOOYmW8M=
-github.com/azyablov/fat/lib/jsonrpc/formats v0.0.0-20230328190342-ee2c756fc060 h1:l2u66Kh/Ey0H8qKXVCBbSV8NFvp6G0xhBGGN/05osZI=
-github.com/azyablov/fat/lib/jsonrpc/formats v0.0.0-20230328190342-ee2c756fc060/go.mod h1:KZcRIhS8T82XpC6BcwgnvYIvkq59hYBcWCPVOjCjg4w=
-github.com/azyablov/fat/lib/jsonrpc/methods v0.0.0-20230328190342-ee2c756fc060 h1:hV9FxGbD+m3/uOTzLRRMiKzFYkwC2EVRAN80V+qXXUI=
-github.com/azyablov/fat/lib/jsonrpc/methods v0.0.0-20230328190342-ee2c756fc060/go.mod h1:y8AbPwqzOqc6E6WshFHcgmtsNbKxIoKFsipUyn9M9SA=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
